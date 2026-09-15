@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= e(isset($title) ? $title . ' — ' . $siteName : $siteName) ?></title>
+    <link rel="alternate" type="application/rss+xml" title="<?= e($siteName) ?>" href="/feed.xml">
     <link rel="stylesheet" href="/pico.css">
     <link rel="stylesheet" href="/style.css">
 </head>

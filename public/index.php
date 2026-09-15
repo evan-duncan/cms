@@ -82,6 +82,12 @@ $router->add('GET', '/', function (): void {
     render('posts/index', ['posts' => Post::published()]);
 });
 
+$router->add('GET', '/feed.xml', function (): void {
+    header('Content-Type: application/rss+xml; charset=utf-8');
+
+    echo feed_xml(Post::published(), site_url(), Setting::get('site_name', 'cms'));
+});
+
 $router->add('GET', '/posts/{slug}', function (array $params): void {
     $post = Post::publishedBySlug($params['slug']);
 

@@ -48,6 +48,55 @@ function post_date(?string $timestamp): string
 }
 
 /**
+ * The site's absolute URL, without a trailing slash, taken from the request
+ * that is asking for it.
+ *
+ * ponytail: reads the request host, so a feed built off-request (a cron job,
+ * a CLI export) has nothing to read; add a site_url setting if that happens.
+ */
+function site_url(): string
+{
+    $scheme = ($_SERVER['HTTPS'] ?? '') !== '' ? 'https' : 'http';
+
+    return $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+}
+
+/**
+ * Renders published posts as an RSS 2.0 document. Bodies go out as rendered
+ * Markdown: e() escapes that HTML so the reader's XML parser hands it back
+ * as markup, while raw HTML markdown() already escaped stays text.
+ *
+ * @param array<int, array<string, mixed>> $posts
+ */
+function feed_xml(array $posts, string $base, string $siteName): string
+{
+    $items = '';
+
+    foreach ($posts as $post) {
+        $url = $base . '/posts/' . $post['slug'];
+
+        $items .= "  <item>\n"
+            . '    <title>' . e($post['title']) . "</title>\n"
+            . '    <link>' . e($url) . "</link>\n"
+            . '    <guid isPermaLink="true">' . e($url) . "</guid>\n"
+            . '    <pubDate>' . date(DATE_RSS, strtotime($post['published_at'])) . "</pubDate>\n"
+            . '    <description>' . e(markdown($post['body'])) . "</description>\n"
+            . "  </item>\n";
+    }
+
+    return '<?xml version="1.0" encoding="UTF-8"?>' . "\n"
+        . '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">' . "\n"
+        . "<channel>\n"
+        . '  <title>' . e($siteName) . "</title>\n"
+        . '  <link>' . e($base) . "/</link>\n"
+        . '  <description>' . e($siteName) . "</description>\n"
+        . '  <atom:link href="' . e($base . '/feed.xml') . '" rel="self" type="application/rss+xml"/>' . "\n"
+        . $items
+        . "</channel>\n"
+        . "</rss>\n";
+}
+
+/**
  * Renders a post body as HTML. Raw HTML in the body is escaped rather than
  * passed through, so a body needs no e() around it.
  *
