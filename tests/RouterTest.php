@@ -54,4 +54,22 @@ final class RouterTest extends TestCase
             'unknown path' => ['GET', '/nope'],
         ];
     }
+
+    public function testMatchesTheAdminEditPattern(): void
+    {
+        $router = new Router();
+        $router->add('GET', '/admin/posts/{id}/edit', fn () => null);
+
+        [, $params] = $router->match('GET', '/admin/posts/12/edit');
+
+        $this->assertSame(['id' => '12'], $params);
+    }
+
+    public function testDoesNotMatchTheAdminEditPatternWithoutAnId(): void
+    {
+        $router = new Router();
+        $router->add('GET', '/admin/posts/{id}/edit', fn () => null);
+
+        $this->assertNull($router->match('GET', '/admin/posts//edit'));
+    }
 }

@@ -29,3 +29,14 @@ function redirect(string $path): void
     http_response_code(302);
     exit;
 }
+
+/**
+ * Formats a database timestamp for <input type="datetime-local">, which
+ * accepts only "Y-m-d\TH:i". An empty value means the post is a draft.
+ *
+ * ponytail: server timezone only; add a per-user timezone if a second author appears.
+ */
+function datetime_local(?string $timestamp): string
+{
+    return $timestamp === null ? '' : date('Y-m-d\TH:i', strtotime($timestamp));
+}
