@@ -1,15 +1,15 @@
 <h1>Your posts</h1>
 <p><a href="/admin/posts/new">New post</a></p>
-<ul>
+<ul class="feed">
     <?php foreach ($posts as $post): ?>
         <li>
             <a href="/admin/posts/<?= e((string) $post['id']) ?>/edit"><?= e($post['title']) ?></a>
             <?php if ($post['published_at'] === null): ?>
                 <span>Draft</span>
             <?php elseif (strtotime($post['published_at']) > time()): ?>
-                <span>Scheduled for <time datetime="<?= e($post['published_at']) ?>"><?= e($post['published_at']) ?></time></span>
+                <span>Scheduled for <time datetime="<?= e($post['published_at']) ?>"><?= e(post_date($post['published_at'])) ?></time></span>
             <?php else: ?>
-                <span>Published <time datetime="<?= e($post['published_at']) ?>"><?= e($post['published_at']) ?></time></span>
+                <span>Published <time datetime="<?= e($post['published_at']) ?>"><?= e(post_date($post['published_at'])) ?></time></span>
             <?php endif; ?>
         </li>
     <?php endforeach; ?>

@@ -1,0 +1,22 @@
+/* Post feed. Everything else is Pico's classless defaults. */
+.feed {
+    list-style: none;
+    padding: 0;
+}
+
+.feed li {
+    padding-block: 1rem;
+    border-bottom: 1px solid var(--pico-muted-border-color);
+}
+
+.feed li > a {
+    font-size: 1.25rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.feed > li > time {
+    display: block;
+    color: var(--pico-muted-color);
+    font-size: 0.875rem;
+}

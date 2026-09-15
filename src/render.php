@@ -41,6 +41,12 @@ function datetime_local(?string $timestamp): string
     return $timestamp === null ? '' : date('Y-m-d\TH:i', strtotime($timestamp));
 }
 
+/** Formats a database timestamp for display. */
+function post_date(?string $timestamp): string
+{
+    return $timestamp === null ? '' : date('F j, Y', strtotime($timestamp));
+}
+
 /**
  * Renders a post body as HTML. Raw HTML in the body is escaped rather than
  * passed through, so a body needs no e() around it.

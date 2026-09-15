@@ -6,7 +6,8 @@
         "php": "^8.4",
         "ext-pdo": "*",
         "ext-pdo_pgsql": "*",
-        "league/commonmark": "^2.10"
+        "league/commonmark": "^2.10",
+        "picocss/pico": "^2.1"
     },
     "autoload": {
         "classmap": ["src/"],

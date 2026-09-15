@@ -6,7 +6,11 @@
 
 ## Layout
 
-- `public/index.php` — front controller and route table; the only web-exposed file.
+- `public/index.php` — front controller and route table; the only PHP file under `public/`.
+- `public/pico.css` — symlink to Pico's classless fuchsia build in `vendor/`
+  (`composer require picocss/pico`). Swap the accent color by repointing the
+  symlink at another `pico.classless.<color>.min.css`.
+- `public/style.css` — post feed rules; everything else is Pico's defaults.
 - `src/Router.php` — pattern matching (`/posts/{slug}`), one segment per
   placeholder, plus per-route middleware run before the handler.
 - `src/Db.php` — lazy PDO singleton, configured from environment.
