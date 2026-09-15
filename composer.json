@@ -5,7 +5,8 @@
     "require": {
         "php": "^8.4",
         "ext-pdo": "*",
-        "ext-pdo_pgsql": "*"
+        "ext-pdo_pgsql": "*",
+        "league/commonmark": "^2.10"
     },
     "autoload": {
         "classmap": ["src/"],

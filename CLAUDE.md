@@ -40,6 +40,9 @@ composer test                            # migrate cms_test, then phpunit
 
 - Escape every value rendered into a template with `e()`. Templates receive
   `$data` keys as local variables.
+- Post bodies are Markdown, rendered per request by `markdown()` in
+  `src/render.php`. It escapes raw HTML itself, so a body takes `markdown()`
+  instead of `e()`, never both.
 - All SQL goes through prepared statements; never interpolate into a query.
 - Database config comes from `DATABASE_DSN`, `DATABASE_USER`, `DATABASE_PASSWORD`;
   defaults match `compose.yaml` (`cms`/`cms`/`cms` on localhost:5432).

@@ -40,3 +40,22 @@ function datetime_local(?string $timestamp): string
 {
     return $timestamp === null ? '' : date('Y-m-d\TH:i', strtotime($timestamp));
 }
+
+/**
+ * Renders a post body as HTML. Raw HTML in the body is escaped rather than
+ * passed through, so a body needs no e() around it.
+ *
+ * ponytail: converted per request; cache into a column if rendering shows up
+ * in a profile.
+ */
+function markdown(string $body): string
+{
+    static $converter = null;
+
+    $converter ??= new League\CommonMark\CommonMarkConverter([
+        'html_input' => 'escape',
+        'allow_unsafe_links' => false,
+    ]);
+
+    return (string) $converter->convert($body);
+}

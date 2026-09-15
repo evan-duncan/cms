@@ -6,7 +6,7 @@
     <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
     <p><label>Title <input name="title" value="<?= e($post['title']) ?>" required autofocus></label></p>
     <p><label>Slug <input name="slug" value="<?= e($post['slug']) ?>" placeholder="derived from the title"></label></p>
-    <p><label>Body<br><textarea name="body" rows="20" cols="80"><?= e($post['body']) ?></textarea></label></p>
+    <p><label>Body (Markdown)<br><textarea name="body" rows="20" cols="80"><?= e($post['body']) ?></textarea></label></p>
     <p>
         <label>Publish at
             <input type="datetime-local" name="published_at" value="<?= e(datetime_local($post['published_at'])) ?>">
