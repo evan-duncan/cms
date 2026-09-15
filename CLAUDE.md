@@ -10,11 +10,14 @@
 - `src/Router.php` — pattern matching (`/posts/{slug}`), one segment per placeholder.
 - `src/Db.php` — lazy PDO singleton, configured from environment.
 - `src/Post.php` — post queries.
+- `src/Auth.php` — password check, session login, CSRF tokens.
 - `src/render.php` — `render()` (template + layout) and `e()` (HTML escaping).
 - `templates/` — plain PHP templates. `layout.php` wraps the rendered `$content`.
+- `templates/admin/` — login form, post list, post editor.
 - `migrations/` — numbered plain SQL, applied by `bin/migrate`.
 - `bin/migrate` — applies pending migrations in filename order, one transaction
   each, recording every applied file in `schema_migrations`.
+- `bin/create-user` — creates the author account or resets its password.
 - `docker/initdb/` — runs once on first boot of an empty volume; creates `cms_test`.
 - `compose.yaml` — local PostgreSQL 18 (`cms` and `cms_test` databases).
 - `tests/` — PHPUnit. Database tests run against `cms_test`.
@@ -25,6 +28,7 @@
 docker compose up -d                     # postgres on localhost:5432
 composer install
 php bin/migrate                          # migrate the dev database
+php bin/create-user you@example.com pw   # create or reset the author account
 php -S localhost:8000 -t public          # dev server
 composer test                            # migrate cms_test, then phpunit
 ```
@@ -42,3 +46,11 @@ composer test                            # migrate cms_test, then phpunit
   never edited after being applied — add a new one instead.
 - Database tests extend the pattern in `tests/PostTest.php`: open a transaction
   in `setUp()`, roll it back in `tearDown()`, so rows do not leak between tests.
+- A post's state lives entirely in `posts.published_at`: NULL is a draft, a
+  future timestamp is scheduled, a past timestamp is live. There is no status
+  column and no publishing worker — `published_at <= now()` is evaluated per
+  request.
+- Public queries must filter on `published_at`. `Post::publishedBySlug()` does;
+  `Post::byId()` and `Post::all()` do not and are admin-only.
+- Every route under `/admin` starts with `Auth::requireLogin()`, and every POST
+  route starts with `Auth::verifyCsrf($_POST['csrf'] ?? null)`.
