@@ -20,6 +20,11 @@ $router->add('GET', '/posts/{slug}', function (array $params): void {
     render('posts/show', ['post' => $post]);
 });
 
+$router->add('GET', '/admin', function (): void {
+    Auth::requireLogin();
+    render('admin/index', ['posts' => Post::all()]);
+});
+
 $router->add('GET', '/admin/login', function (): void {
     render('admin/login', ['csrf' => Auth::csrfToken(), 'error' => null]);
 });
