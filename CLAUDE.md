@@ -7,7 +7,8 @@
 ## Layout
 
 - `public/index.php` — front controller and route table; the only web-exposed file.
-- `src/Router.php` — pattern matching (`/posts/{slug}`), one segment per placeholder.
+- `src/Router.php` — pattern matching (`/posts/{slug}`), one segment per
+  placeholder, plus per-route middleware run before the handler.
 - `src/Db.php` — lazy PDO singleton, configured from environment.
 - `src/Post.php` — post queries.
 - `src/Auth.php` — password check, session login, CSRF tokens.
@@ -52,5 +53,7 @@ composer test                            # migrate cms_test, then phpunit
   request.
 - Public queries must filter on `published_at`. `Post::publishedBySlug()` does;
   `Post::byId()` and `Post::all()` do not and are admin-only.
-- Every route under `/admin` starts with `Auth::requireLogin()`, and every POST
-  route starts with `Auth::verifyCsrf($_POST['csrf'] ?? null)`.
+- Guards are route middleware, not handler code: pass them as the fourth
+  argument to `$router->add()`. Every route under `/admin` carries
+  `Auth::requireLogin(...)`, and every POST route carries `Auth::requireCsrf(...)`,
+  login first so a logged-out visitor is redirected rather than shown a 403.

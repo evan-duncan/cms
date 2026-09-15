@@ -62,6 +62,7 @@ class Auth
         session_destroy();
     }
 
+    /** Route middleware: sends a logged-out visitor to the login form. */
     public static function requireLogin(): void
     {
         if (!self::check()) {
@@ -76,9 +77,11 @@ class Auth
         return $_SESSION['csrf'] ??= bin2hex(random_bytes(32));
     }
 
-    public static function verifyCsrf(?string $token): void
+    /** Route middleware: rejects a POST whose form token does not match the session. */
+    public static function requireCsrf(): void
     {
         self::session();
+        $token = $_POST['csrf'] ?? null;
 
         if (!is_string($token) || !hash_equals($_SESSION['csrf'] ?? '', $token)) {
             http_response_code(403);

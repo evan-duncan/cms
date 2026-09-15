@@ -42,17 +42,14 @@ $router->add('GET', '/posts/{slug}', function (array $params): void {
 });
 
 $router->add('GET', '/admin', function (): void {
-    Auth::requireLogin();
     render('admin/index', ['posts' => Post::all()]);
-});
+}, [Auth::requireLogin(...)]);
 
 $router->add('GET', '/admin/login', function (): void {
     render('admin/login', ['csrf' => Auth::csrfToken(), 'error' => null]);
 });
 
 $router->add('POST', '/admin/login', function (): void {
-    Auth::verifyCsrf($_POST['csrf'] ?? null);
-
     if (!Auth::attempt($_POST['email'] ?? '', $_POST['password'] ?? '')) {
         http_response_code(422);
         render('admin/login', ['csrf' => Auth::csrfToken(), 'error' => 'Wrong email or password.']);
@@ -60,27 +57,22 @@ $router->add('POST', '/admin/login', function (): void {
     }
 
     redirect('/admin');
-});
+}, [Auth::requireCsrf(...)]);
 
 $router->add('POST', '/admin/logout', function (): void {
-    Auth::verifyCsrf($_POST['csrf'] ?? null);
     Auth::logout();
     redirect('/');
-});
+}, [Auth::requireCsrf(...)]);
 
 $router->add('GET', '/admin/posts/new', function (): void {
-    Auth::requireLogin();
     render('admin/form', [
         'post' => ['id' => null, 'slug' => '', 'title' => '', 'body' => '', 'published_at' => null],
         'csrf' => Auth::csrfToken(),
         'error' => null,
     ]);
-});
+}, [Auth::requireLogin(...)]);
 
 $router->add('POST', '/admin/posts', function (): void {
-    Auth::requireLogin();
-    Auth::verifyCsrf($_POST['csrf'] ?? null);
-
     $post = post_input(null);
 
     if ($post['title'] === '') {
@@ -101,10 +93,9 @@ $router->add('POST', '/admin/posts', function (): void {
     }
 
     redirect('/admin');
-});
+}, [Auth::requireLogin(...), Auth::requireCsrf(...)]);
 
 $router->add('GET', '/admin/posts/{id}/edit', function (array $params): void {
-    Auth::requireLogin();
 
     $post = Post::byId((int) $params['id']);
 
@@ -115,12 +106,9 @@ $router->add('GET', '/admin/posts/{id}/edit', function (array $params): void {
     }
 
     render('admin/form', ['post' => $post, 'csrf' => Auth::csrfToken(), 'error' => null]);
-});
+}, [Auth::requireLogin(...)]);
 
 $router->add('POST', '/admin/posts/{id}', function (array $params): void {
-    Auth::requireLogin();
-    Auth::verifyCsrf($_POST['csrf'] ?? null);
-
     $post = post_input((int) $params['id']);
 
     if ($post['title'] === '') {
@@ -141,7 +129,7 @@ $router->add('POST', '/admin/posts/{id}', function (array $params): void {
     }
 
     redirect('/admin');
-});
+}, [Auth::requireLogin(...), Auth::requireCsrf(...)]);
 
 $router->dispatch(
     $_SERVER['REQUEST_METHOD'],
