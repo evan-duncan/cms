@@ -14,12 +14,16 @@
 - `src/Router.php` — pattern matching (`/posts/{slug}`), one segment per
   placeholder, plus per-route middleware run before the handler.
 - `src/Db.php` — lazy PDO singleton, configured from environment.
-- `src/Post.php` — post queries.
+- `src/Content.php` — shared queries for slug-addressed content; subclasses
+  name their table in `TABLE`.
+- `src/Post.php`, `src/Page.php` — `Content` subclasses, one per table.
+- `src/Link.php` — footer links (label, url, position) and URL validation.
 - `src/Auth.php` — password check, session login, CSRF tokens.
 - `src/Setting.php` — key/value site settings (`site_name`), cached per request.
 - `src/render.php` — `render()` (template + layout) and `e()` (HTML escaping).
 - `templates/` — plain PHP templates. `layout.php` wraps the rendered `$content`.
-- `templates/admin/` — login form, post list, post editor.
+- `templates/admin/` — login form, admin index (posts, pages, footer links,
+  settings), and one editor shared by posts and pages.
 - `migrations/` — numbered plain SQL, applied by `bin/migrate`.
 - `bin/migrate` — applies pending migrations in filename order, one transaction
   each, recording every applied file in `schema_migrations`.
@@ -61,6 +65,14 @@ composer test                            # migrate cms_test, then phpunit
   request.
 - Public queries must filter on `published_at`. `Post::publishedBySlug()` does;
   `Post::byId()` and `Post::all()` do not and are admin-only.
+- Posts and pages differ only in table and URL prefix. Their admin routes are
+  registered by one loop in `public/index.php`; add a content type by adding a
+  `Content` subclass and a table, not by copying routes. Pages are served from
+  the site root by the `/{slug}` route, which is registered last so every
+  literal route matches first.
+- Footer links are arbitrary label/URL rows, not derived from pages. A link's
+  URL must pass `Link::validUrl()` (site-relative or `http(s)://`) before it
+  reaches an `href`.
 - Guards are route middleware, not handler code: pass them as the fourth
   argument to `$router->add()`. Every route under `/admin` carries
   `Auth::requireLogin(...)`, and every POST route carries `Auth::requireCsrf(...)`,

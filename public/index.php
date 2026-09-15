@@ -3,12 +3,12 @@
 require dirname(__DIR__) . '/vendor/autoload.php';
 
 /**
- * Reads a submitted post from $_POST. An empty slug is derived from the
+ * Reads submitted content from $_POST. An empty slug is derived from the
  * title; an empty date means draft.
  *
  * @return array<string, mixed>
  */
-function post_input(?int $id): array
+function content_input(?int $id): array
 {
     $title = trim($_POST['title'] ?? '');
     $slug = trim($_POST['slug'] ?? '');
@@ -17,10 +17,63 @@ function post_input(?int $id): array
     return [
         'id' => $id,
         'title' => $title,
-        'slug' => $slug !== '' ? $slug : Post::slugify($title),
+        'slug' => $slug !== '' ? $slug : Content::slugify($title),
         'body' => $_POST['body'] ?? '',
         'published_at' => $publishedAt !== '' ? $publishedAt : null,
     ];
+}
+
+/**
+ * Creates ($id null) or updates one piece of content, re-rendering the editor
+ * with an error when the input is rejected.
+ *
+ * @param class-string<Content> $class
+ */
+function save_content(string $type, string $class, ?int $id): void
+{
+    $content = content_input($id);
+
+    $reject = function (string $error) use ($type, $content): void {
+        http_response_code(422);
+        render('admin/form', [
+            'type' => $type,
+            'content' => $content,
+            'csrf' => Auth::csrfToken(),
+            'error' => $error,
+        ]);
+    };
+
+    if ($content['title'] === '') {
+        $reject('Title is required.');
+        return;
+    }
+
+    try {
+        if ($id === null) {
+            $class::create($content['slug'], $content['title'], $content['body'], $content['published_at']);
+        } else {
+            $class::update($id, $content['slug'], $content['title'], $content['body'], $content['published_at']);
+        }
+    } catch (PDOException $e) {
+        if ($e->getCode() !== '23505') {
+            throw $e;
+        }
+        $reject('That slug is already taken.');
+        return;
+    }
+
+    redirect('/admin');
+}
+
+/** @param array<string, mixed> $data */
+function render_admin_index(array $data = []): void
+{
+    render('admin/index', $data + [
+        'posts' => Post::all(),
+        'pages' => Page::all(),
+        'links' => Link::all(),
+        'error' => null,
+    ]);
 }
 
 $router = new Router();
@@ -42,7 +95,7 @@ $router->add('GET', '/posts/{slug}', function (array $params): void {
 });
 
 $router->add('GET', '/admin', function (): void {
-    render('admin/index', ['posts' => Post::all()]);
+    render_admin_index();
 }, [Auth::requireLogin(...)]);
 
 $router->add('GET', '/admin/login', function (): void {
@@ -69,77 +122,87 @@ $router->add('POST', '/admin/settings', function (): void {
     redirect('/admin');
 }, [Auth::requireLogin(...), Auth::requireCsrf(...)]);
 
+$router->add('POST', '/admin/links', function (): void {
+    $label = trim($_POST['label'] ?? '');
+    $url = trim($_POST['url'] ?? '');
+
+    if ($label === '' || !Link::validUrl($url)) {
+        http_response_code(422);
+        render_admin_index(['error' => 'A link needs a label and a URL starting with /, http:// or https://.']);
+        return;
+    }
+
+    Link::create(mb_substr($label, 0, 100), $url, (int) ($_POST['position'] ?? 0));
+
+    redirect('/admin');
+}, [Auth::requireLogin(...), Auth::requireCsrf(...)]);
+
+$router->add('POST', '/admin/links/{id}/delete', function (array $params): void {
+    Link::delete((int) $params['id']);
+
+    redirect('/admin');
+}, [Auth::requireLogin(...), Auth::requireCsrf(...)]);
+
 $router->add('POST', '/admin/logout', function (): void {
     Auth::logout();
     redirect('/');
 }, [Auth::requireCsrf(...)]);
 
-$router->add('GET', '/admin/posts/new', function (): void {
-    render('admin/form', [
-        'post' => ['id' => null, 'slug' => '', 'title' => '', 'body' => '', 'published_at' => null],
-        'csrf' => Auth::csrfToken(),
-        'error' => null,
-    ]);
-}, [Auth::requireLogin(...)]);
+/**
+ * Posts and pages differ only in their table and their URL prefix, so the
+ * editor routes are registered once for each.
+ */
+foreach (['posts' => Post::class, 'pages' => Page::class] as $type => $class) {
+    $router->add('GET', "/admin/{$type}/new", function () use ($type): void {
+        render('admin/form', [
+            'type' => $type,
+            'content' => ['id' => null, 'slug' => '', 'title' => '', 'body' => '', 'published_at' => null],
+            'csrf' => Auth::csrfToken(),
+            'error' => null,
+        ]);
+    }, [Auth::requireLogin(...)]);
 
-$router->add('POST', '/admin/posts', function (): void {
-    $post = post_input(null);
+    $router->add('POST', "/admin/{$type}", function () use ($type, $class): void {
+        save_content($type, $class, null);
+    }, [Auth::requireLogin(...), Auth::requireCsrf(...)]);
 
-    if ($post['title'] === '') {
-        http_response_code(422);
-        render('admin/form', ['post' => $post, 'csrf' => Auth::csrfToken(), 'error' => 'Title is required.']);
-        return;
-    }
+    $router->add('GET', "/admin/{$type}/{id}/edit", function (array $params) use ($type, $class): void {
+        $content = $class::byId((int) $params['id']);
 
-    try {
-        Post::create($post['slug'], $post['title'], $post['body'], $post['published_at']);
-    } catch (PDOException $e) {
-        if ($e->getCode() !== '23505') {
-            throw $e;
+        if ($content === null) {
+            http_response_code(404);
+            render('404');
+            return;
         }
-        http_response_code(422);
-        render('admin/form', ['post' => $post, 'csrf' => Auth::csrfToken(), 'error' => 'That slug is already taken.']);
-        return;
-    }
 
-    redirect('/admin');
-}, [Auth::requireLogin(...), Auth::requireCsrf(...)]);
+        render('admin/form', [
+            'type' => $type,
+            'content' => $content,
+            'csrf' => Auth::csrfToken(),
+            'error' => null,
+        ]);
+    }, [Auth::requireLogin(...)]);
 
-$router->add('GET', '/admin/posts/{id}/edit', function (array $params): void {
+    $router->add('POST', "/admin/{$type}/{id}", function (array $params) use ($type, $class): void {
+        save_content($type, $class, (int) $params['id']);
+    }, [Auth::requireLogin(...), Auth::requireCsrf(...)]);
+}
 
-    $post = Post::byId((int) $params['id']);
+/**
+ * Pages live at the site root, so this route matches any single segment and
+ * is registered last: every literal route above wins first.
+ */
+$router->add('GET', '/{slug}', function (array $params): void {
+    $page = Page::publishedBySlug($params['slug']);
 
-    if ($post === null) {
+    if ($page === null) {
         http_response_code(404);
         render('404');
         return;
     }
 
-    render('admin/form', ['post' => $post, 'csrf' => Auth::csrfToken(), 'error' => null]);
-}, [Auth::requireLogin(...)]);
-
-$router->add('POST', '/admin/posts/{id}', function (array $params): void {
-    $post = post_input((int) $params['id']);
-
-    if ($post['title'] === '') {
-        http_response_code(422);
-        render('admin/form', ['post' => $post, 'csrf' => Auth::csrfToken(), 'error' => 'Title is required.']);
-        return;
-    }
-
-    try {
-        Post::update($post['id'], $post['slug'], $post['title'], $post['body'], $post['published_at']);
-    } catch (PDOException $e) {
-        if ($e->getCode() !== '23505') {
-            throw $e;
-        }
-        http_response_code(422);
-        render('admin/form', ['post' => $post, 'csrf' => Auth::csrfToken(), 'error' => 'That slug is already taken.']);
-        return;
-    }
-
-    redirect('/admin');
-}, [Auth::requireLogin(...), Auth::requireCsrf(...)]);
+    render('pages/show', ['page' => $page]);
+});
 
 $router->dispatch(
     $_SERVER['REQUEST_METHOD'],

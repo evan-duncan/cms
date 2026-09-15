@@ -13,5 +13,15 @@
     <?php if (Auth::check()): ?><a href="/admin">Admin</a><?php endif; ?>
 </header>
 <main><?= $content ?></main>
+<?php $links = Link::all(); ?>
+<?php if ($links !== []): ?>
+    <footer>
+        <nav>
+            <?php foreach ($links as $link): ?>
+                <a href="<?= e($link['url']) ?>"><?= e($link['label']) ?></a>
+            <?php endforeach; ?>
+        </nav>
+    </footer>
+<?php endif; ?>
 </body>
 </html>
