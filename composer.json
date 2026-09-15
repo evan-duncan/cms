@@ -1,0 +1,24 @@
+{
+    "name": "evan-duncan/cms",
+    "description": "A blogging platform",
+    "type": "project",
+    "require": {
+        "php": "^8.4",
+        "ext-pdo": "*",
+        "ext-pdo_pgsql": "*"
+    },
+    "autoload": {
+        "classmap": ["src/"],
+        "files": ["src/render.php"]
+    },
+    "scripts": {
+        "migrate": "php bin/migrate",
+        "test": ["@putenv DATABASE_DSN=pgsql:host=localhost;port=5432;dbname=cms_test", "php bin/migrate", "phpunit"]
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^13.3"
+    }
+}
