@@ -2,6 +2,8 @@
 
 class Auth
 {
+    private const SESSION_KEY = 'user_id';
+
     /**
      * Looks up a user by email and checks the password against the stored hash.
      * Touches no session state, so it is usable from tests and the CLI.
@@ -17,5 +19,70 @@ class Auth
         }
 
         return (int) $user['id'];
+    }
+
+    /**
+     * Started lazily rather than in the front controller, so readers of the
+     * public blog never receive a session cookie.
+     */
+    private static function session(): void
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_set_cookie_params(['httponly' => true, 'samesite' => 'Lax']);
+            session_start();
+        }
+    }
+
+    public static function attempt(string $email, string $password): bool
+    {
+        $id = self::verify($email, $password);
+
+        if ($id === null) {
+            return false;
+        }
+
+        self::session();
+        session_regenerate_id(true);
+        $_SESSION[self::SESSION_KEY] = $id;
+
+        return true;
+    }
+
+    public static function check(): bool
+    {
+        self::session();
+
+        return isset($_SESSION[self::SESSION_KEY]);
+    }
+
+    public static function logout(): void
+    {
+        self::session();
+        $_SESSION = [];
+        session_destroy();
+    }
+
+    public static function requireLogin(): void
+    {
+        if (!self::check()) {
+            redirect('/admin/login');
+        }
+    }
+
+    public static function csrfToken(): string
+    {
+        self::session();
+
+        return $_SESSION['csrf'] ??= bin2hex(random_bytes(32));
+    }
+
+    public static function verifyCsrf(?string $token): void
+    {
+        self::session();
+
+        if (!is_string($token) || !hash_equals($_SESSION['csrf'] ?? '', $token)) {
+            http_response_code(403);
+            exit;
+        }
     }
 }

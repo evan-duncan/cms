@@ -1,0 +1,24 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * Creates the author account, or resets its password if the email already exists.
+ * Target database comes from DATABASE_DSN (see src/Db.php).
+ */
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+
+$email = $argv[1] ?? null;
+$password = $argv[2] ?? null;
+
+if ($email === null || $password === null) {
+    fwrite(STDERR, "usage: bin/create-user <email> <password>\n");
+    exit(1);
+}
+
+Db::conn()->prepare(
+    'INSERT INTO users (email, password_hash) VALUES (:email, :hash)
+     ON CONFLICT (email) DO UPDATE SET password_hash = EXCLUDED.password_hash'
+)->execute([':email' => $email, ':hash' => password_hash($password, PASSWORD_DEFAULT)]);
+
+echo "user ready: {$email}\n";

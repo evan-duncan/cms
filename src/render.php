@@ -22,3 +22,10 @@ function e(?string $value): string
 {
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
+
+function redirect(string $path): void
+{
+    header('Location: ' . $path);
+    http_response_code(302);
+    exit;
+}
