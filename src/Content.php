@@ -13,16 +13,17 @@ abstract class Content
     protected const TABLE = '';
 
     /** @return array<int, array<string, mixed>> */
-    public static function published(int $limit = 20): array
+    public static function published(int $limit = 20, int $offset = 0): array
     {
         $stmt = Db::conn()->prepare(
             'SELECT slug, title, body, published_at
              FROM ' . static::TABLE . '
              WHERE published_at IS NOT NULL AND published_at <= now()
              ORDER BY published_at DESC
-             LIMIT :limit'
+             LIMIT :limit OFFSET :offset'
         );
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
 
         return $stmt->fetchAll();

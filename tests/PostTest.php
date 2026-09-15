@@ -123,6 +123,17 @@ final class PostTest extends TestCase
         $this->assertNotNull($post['published_at']);
     }
 
+    public function testPublishedPagesThroughTheArchiveNewestFirst(): void
+    {
+        $this->insert('one', 'One', '2020-01-01');
+        $this->insert('two', 'Two', '2020-01-02');
+        $this->insert('three', 'Three', '2020-01-03');
+
+        $this->assertSame(['Three', 'Two'], array_column(Post::published(2), 'title'));
+        $this->assertSame(['One'], array_column(Post::published(2, 2), 'title'));
+        $this->assertSame([], Post::published(2, 99));
+    }
+
     public function testDeleteRemovesThePost(): void
     {
         $id = $this->insert('gone', 'Gone', '2020-01-01');

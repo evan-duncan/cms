@@ -79,7 +79,18 @@ function render_admin_index(array $data = []): void
 $router = new Router();
 
 $router->add('GET', '/', function (): void {
-    render('posts/index', ['posts' => Post::published()]);
+    $perPage = 20;
+    $page = max(1, (int) ($_GET['page'] ?? 1));
+
+    // Asking for one row past the page answers "is there an older page?"
+    // without a second COUNT query.
+    $posts = Post::published($perPage + 1, ($page - 1) * $perPage);
+
+    render('posts/index', [
+        'posts' => array_slice($posts, 0, $perPage),
+        'page' => $page,
+        'hasOlder' => count($posts) > $perPage,
+    ]);
 });
 
 $router->add('GET', '/feed.xml', function (): void {
