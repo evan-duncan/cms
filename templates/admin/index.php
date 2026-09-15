@@ -15,6 +15,10 @@
                 <?php else: ?>
                     <span>Published <time datetime="<?= e($item['published_at']) ?>"><?= e(post_date($item['published_at'])) ?></time></span>
                 <?php endif; ?>
+                <form method="post" action="/admin/<?= e($type) ?>/<?= e((string) $item['id']) ?>/delete" onsubmit="return confirm('Delete this permanently?')">
+                    <input type="hidden" name="csrf" value="<?= e(Auth::csrfToken()) ?>">
+                    <button type="submit">Delete</button>
+                </form>
             </li>
         <?php endforeach; ?>
     </ul>

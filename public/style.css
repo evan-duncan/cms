@@ -20,3 +20,23 @@
     color: var(--pico-muted-color);
     font-size: 0.875rem;
 }
+
+/* Pico makes every submit button full width; feed rows want a small inline one. */
+.feed li form {
+    display: inline;
+    margin: 0;
+}
+
+.feed li button {
+    width: auto;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    background: none;
+    border-color: var(--pico-muted-border-color);
+    color: var(--pico-muted-color);
+}
+
+.feed li button:hover {
+    border-color: var(--pico-del-color);
+    color: var(--pico-del-color);
+}

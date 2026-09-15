@@ -186,6 +186,12 @@ foreach (['posts' => Post::class, 'pages' => Page::class] as $type => $class) {
     $router->add('POST', "/admin/{$type}/{id}", function (array $params) use ($type, $class): void {
         save_content($type, $class, (int) $params['id']);
     }, [Auth::requireLogin(...), Auth::requireCsrf(...)]);
+
+    $router->add('POST', "/admin/{$type}/{id}/delete", function (array $params) use ($class): void {
+        $class::delete((int) $params['id']);
+
+        redirect('/admin');
+    }, [Auth::requireLogin(...), Auth::requireCsrf(...)]);
 }
 
 /**

@@ -123,6 +123,15 @@ final class PostTest extends TestCase
         $this->assertNotNull($post['published_at']);
     }
 
+    public function testDeleteRemovesThePost(): void
+    {
+        $id = $this->insert('gone', 'Gone', '2020-01-01');
+
+        Post::delete($id);
+
+        $this->assertNull(Post::byId($id));
+    }
+
     public function testByIdReturnsNullWhenMissing(): void
     {
         $this->assertNull(Post::byId(0));

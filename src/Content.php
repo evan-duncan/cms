@@ -94,6 +94,11 @@ abstract class Content
         ]);
     }
 
+    public static function delete(int $id): void
+    {
+        Db::conn()->prepare('DELETE FROM ' . static::TABLE . ' WHERE id = :id')->execute([':id' => $id]);
+    }
+
     public static function slugify(string $title): string
     {
         return trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($title)), '-');
