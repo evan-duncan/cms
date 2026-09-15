@@ -50,6 +50,11 @@ class Auth
 
     public static function check(): bool
     {
+        // No session cookie means no login, so public readers never start a session.
+        if (session_status() !== PHP_SESSION_ACTIVE && !isset($_COOKIE[session_name()])) {
+            return false;
+        }
+
         self::session();
 
         return isset($_SESSION[self::SESSION_KEY]);

@@ -59,6 +59,16 @@ $router->add('POST', '/admin/login', function (): void {
     redirect('/admin');
 }, [Auth::requireCsrf(...)]);
 
+$router->add('POST', '/admin/settings', function (): void {
+    $name = trim($_POST['site_name'] ?? '');
+
+    if ($name !== '') {
+        Setting::set('site_name', mb_substr($name, 0, 100));
+    }
+
+    redirect('/admin');
+}, [Auth::requireLogin(...), Auth::requireCsrf(...)]);
+
 $router->add('POST', '/admin/logout', function (): void {
     Auth::logout();
     redirect('/');

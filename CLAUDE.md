@@ -16,6 +16,7 @@
 - `src/Db.php` — lazy PDO singleton, configured from environment.
 - `src/Post.php` — post queries.
 - `src/Auth.php` — password check, session login, CSRF tokens.
+- `src/Setting.php` — key/value site settings (`site_name`), cached per request.
 - `src/render.php` — `render()` (template + layout) and `e()` (HTML escaping).
 - `templates/` — plain PHP templates. `layout.php` wraps the rendered `$content`.
 - `templates/admin/` — login form, post list, post editor.

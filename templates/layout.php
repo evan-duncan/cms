@@ -3,12 +3,15 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>cms</title>
+    <title><?= e(Setting::get('site_name', 'cms')) ?></title>
     <link rel="stylesheet" href="/pico.css">
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<header><a href="/">cms</a></header>
+<header>
+    <a href="/"><?= e(Setting::get('site_name', 'cms')) ?></a>
+    <?php if (Auth::check()): ?><a href="/admin">Admin</a><?php endif; ?>
+</header>
 <main><?= $content ?></main>
 </body>
 </html>
