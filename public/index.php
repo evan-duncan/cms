@@ -9,7 +9,7 @@ $router->add('GET', '/', function (): void {
 });
 
 $router->add('GET', '/posts/{slug}', function (array $params): void {
-    $post = Post::bySlug($params['slug']);
+    $post = Post::publishedBySlug($params['slug']);
 
     if ($post === null) {
         http_response_code(404);
